@@ -26,7 +26,7 @@ import torch
 import numpy as np
 SEED = 42
 np.random.seed(SEED)
-import random
+import random, os
 random.seed(SEED)
 torch.manual_seed(SEED)
 torch.backends.cudnn.deterministic = True
@@ -48,12 +48,19 @@ if __name__ == "__main__":
     #sys.argv[3] should be a relative path pointing to the folder containing input data. DM will look for
     #three files: train.csv, validation.csv, test.csv. They must all be formatted in the required DM format
     data_dir = home_dir+sys.argv[3]
-    print("data=" + embedding_cache_dir)
+    print("data=" + data_dir)
+    if os.path.exists(data_dir+"/cacheddata.pth"):
+        os.remove(data_dir+"/cacheddata.pth")
+    else:
+        print("model file does not exist")
 
     #sys.argv[4] should be a relative path pointing to the output folder
     ourput_dir=home_dir+sys.argv[4]
-    print("output=" + embedding_cache_dir)
-
+    print("output=" + ourput_dir)
+    if os.path.exists(ourput_dir+"/best_model.pth"):
+        os.remove(ourput_dir+"/best_model.pth")
+    else:
+        print("model file does not exist")
 
 
     # train, validation, test = \
@@ -65,6 +72,7 @@ if __name__ == "__main__":
 
     train, validation, test = \
         dm.data.process(path=data_dir,
+                        cache=None,
                         #check_cached_data=False,
                         embeddings='fasttext.wiki.vec',
                         embeddings_cache_path=embedding_cache_dir,
