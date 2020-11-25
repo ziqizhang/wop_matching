@@ -78,7 +78,7 @@ if __name__ == "__main__":
          pos_neg_ratio=pos_neg_ratio,
          optimizer=optim,
          label_smoothing=smoothing,
-         best_save_path=None
+         best_save_path=ourput_dir+"/best_model.pth"
     )
     # end = time.time()
     # print('Training time: ' + str(end - start))
