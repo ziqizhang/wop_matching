@@ -23,6 +23,10 @@ import deepmatcher as dm
 import sys
 import time
 import torch
+import numpy as np
+np.random.seed(42)
+import random
+random.seed(42)
 
 if __name__ == "__main__":
 
