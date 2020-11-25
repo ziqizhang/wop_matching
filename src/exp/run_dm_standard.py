@@ -22,8 +22,11 @@
 import deepmatcher as dm
 import sys
 import time
+import torch
 
 if __name__ == "__main__":
+
+    print("GPU="+str(torch.cuda.is_available()))
 
     #sys.argv[1] is home_dir that forms the root folder to access embeddings, and saved models
     home_dir = sys.argv[1]
