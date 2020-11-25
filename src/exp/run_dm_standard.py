@@ -43,13 +43,16 @@ if __name__ == "__main__":
     #We will always pass the fasttext.wiki.vec alias as the embedding name, so make sure
     #inside this folder there is a file called wiki-news-300d-1M.vec
     embedding_cache_dir=home_dir+sys.argv[2]
+    print("embedding cache="+embedding_cache_dir)
 
     #sys.argv[3] should be a relative path pointing to the folder containing input data. DM will look for
     #three files: train.csv, validation.csv, test.csv. They must all be formatted in the required DM format
     data_dir = home_dir+sys.argv[3]
+    print("data=" + embedding_cache_dir)
 
     #sys.argv[4] should be a relative path pointing to the output folder
     ourput_dir=home_dir+sys.argv[4]
+    print("output=" + embedding_cache_dir)
 
 
 
@@ -62,7 +65,7 @@ if __name__ == "__main__":
 
     train, validation, test = \
         dm.data.process(path=data_dir,
-                        check_cached_data=False,
+                        #check_cached_data=False,
                         embeddings='fasttext.wiki.vec',
                         embeddings_cache_path=embedding_cache_dir,
                         train='train.csv', validation='validation.csv', test='test.csv')
