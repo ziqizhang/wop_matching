@@ -42,6 +42,10 @@ if __name__ == "__main__":
     #sys.argv[2] should be a relative path pointing to the folder where the embedding model used by DM is placed.
     #We will always pass the fasttext.wiki.vec alias as the embedding name, so make sure
     #inside this folder there is a file called wiki-news-300d-1M.vec
+    ###############################
+    # warning: if you want to try different embeddings, you should clear cache or use
+    # cache=None. Because the cache will save feature embeddings
+    ###############################
     embedding_cache_dir=home_dir+sys.argv[2]
     print("embedding cache="+embedding_cache_dir)
 
@@ -76,7 +80,7 @@ if __name__ == "__main__":
                         #check_cached_data=False,
                         embeddings='fasttext.wiki.vec',
                         embeddings_cache_path=embedding_cache_dir,
-                        train='train.csv', validation='validation.csv', test='test.csv')
+                        train='train.csv', validation='valid.csv', test='test.csv')
 
     # parameters to keep consistent with
     nn_type = 'rnn'
@@ -115,3 +119,11 @@ if __name__ == "__main__":
 
     # unlabeled = dm.data.process_unlabeled(path='data_directory/unlabeled.csv', trained_model=model)
     # model.run_prediction(unlabeled)
+
+
+'''
+/home/zz/Work
+/data/deepmatcher_toy/sample_data/itunes-amazon/embedding_cache/prod_skipgram
+/data/deepmatcher_toy/sample_data/itunes-amazon/original
+/data/deepmatcher_toy/sample_data/itunes-amazon/output
+'''
