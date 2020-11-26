@@ -80,7 +80,7 @@ if __name__ == "__main__":
                         #check_cached_data=False,
                         embeddings='fasttext.wiki.vec',
                         embeddings_cache_path=embedding_cache_dir,
-                        train='train.csv', validation='valid.csv', test='test.csv')
+                        train='train.csv', validation='validation.csv', test='test.csv')
 
     # parameters to keep consistent with
     nn_type = 'rnn'

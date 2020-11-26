@@ -70,8 +70,12 @@ def parse_dm_datasets(inFolder, delimiter=','):
         writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL, delimiter=",")
         new_header=["id","label"]
         for h in header:
+            if h=="type":
+                h="atype"
             new_header.append("left_"+h)
         for h in header:
+            if h=="type":
+                h="atype"
             new_header.append("right_" + h)
         writer.writerow(list(new_header))
 
@@ -100,8 +104,12 @@ def parse_dm_datasets(inFolder, delimiter=','):
         writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL, delimiter=",")
         new_header = ["id", "label"]
         for h in header:
+            if h=="type":
+                h="atype"
             new_header.append("left_" + h)
         for h in header:
+            if h=="type":
+                h="atype"
             new_header.append("right_" + h)
         writer.writerow(list(new_header))
 
@@ -129,8 +137,12 @@ def parse_dm_datasets(inFolder, delimiter=','):
         writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL, delimiter=",")
         new_header = ["id", "label"]
         for h in header:
+            if h=="type":
+                h="atype"
             new_header.append("left_" + h)
         for h in header:
+            if h=="type":
+                h="atype"
             new_header.append("right_" + h)
         writer.writerow(list(new_header))
 
