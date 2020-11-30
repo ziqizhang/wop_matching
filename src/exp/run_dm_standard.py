@@ -127,3 +127,11 @@ if __name__ == "__main__":
 /data/deepmatcher_toy/sample_data/itunes-amazon/original
 /data/deepmatcher_toy/sample_data/itunes-amazon/output
 '''
+
+
+'''
+/home/zz/Work
+/data/deepmatcher_toy/sample_data/itunes-amazon/embedding_cache/prod_skipgram
+/data/wdc-lspc/wdclspc/all_small
+/data/deepmatcher_toy/sample_data/itunes-amazon/output
+'''

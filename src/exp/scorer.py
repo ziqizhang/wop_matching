@@ -20,7 +20,9 @@ def parse_results(inFolder, outCSV):
             resultID=None
             scores = []
             for l in lines:
-                if l.startswith("Structured") or l.startswith("Dirty") or l.startswith("Textual"):
+                #
+                # if l.startswith("Structured") or l.startswith("Dirty") or l.startswith("Textual"):
+                if l.startswith("original") or l.startswith("mtcat"):
                     if resultID is None:
                         resultID=l.strip()
                         scores.append(resultID)
@@ -55,6 +57,10 @@ def parse_results(inFolder, outCSV):
         writer.writerow(["\n"])
 
 if __name__ == "__main__":
-    inFolder="/home/zz/Work/wop_matching/output/dm/raw"
-    outCSV="/home/zz/Work/wop_matching/output/dm/dm_result.csv"
-    parse_results(inFolder,outCSV)
+    # inFolder="/home/zz/Work/wop_matching/output/dm/raw"
+    # outCSV="/home/zz/Work/wop_matching/output/dm/dm_result.csv"
+    # parse_results(inFolder,outCSV)
+
+    inFolder = "/home/zz/Work/wop_matching/output/lspm/raw"
+    outCSV = "/home/zz/Work/wop_matching/output/lspm/lspm_result.csv"
+    parse_results(inFolder, outCSV)
