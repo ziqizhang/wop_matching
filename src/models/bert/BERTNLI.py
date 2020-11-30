@@ -42,6 +42,7 @@ class BertSemanticDataGenerator(tf.keras.utils.Sequence):
         sentence_pairs,
         labels,
         batch_size=BATCH_SIZE,
+            bert_model="bert-base-uncased",
         shuffle=True,
         include_targets=True,
     ):
@@ -53,7 +54,7 @@ class BertSemanticDataGenerator(tf.keras.utils.Sequence):
         # Load our BERT Tokenizer to encode the text.
         # We will use base-base-uncased pretrained model.
         self.tokenizer = transformers.BertTokenizer.from_pretrained(
-            "bert-base-uncased", do_lower_case=True
+            bert_model, do_lower_case=True
         )
         self.indexes = np.arange(len(self.sentence_pairs))
         self.on_epoch_end()
@@ -136,6 +137,7 @@ if __name__ == "__main__":
     label_match="entailment"
     label_nomatch="contradiction"
     in_dir = sys.argv[1]
+    bert_model=sys.argv[2]
 
     #read the datasets
     train_df, valid_df, test_df=read_data(in_dir)
@@ -195,7 +197,7 @@ if __name__ == "__main__":
             shape=(max_length,), dtype=tf.int32, name="token_type_ids"
         )
         # Loading pretrained BERT model.
-        bert_model = transformers.TFBertModel.from_pretrained("bert-base-uncased")
+        bert_model = transformers.TFBertModel.from_pretrained(bert_model)
         # Freeze the BERT model to reuse the pretrained features without modifying them.
         bert_model.trainable = False
 
