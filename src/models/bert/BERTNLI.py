@@ -284,7 +284,9 @@ if __name__ == "__main__":
         batch_size=batch_size,
         shuffle=False,
     )
-    model.evaluate(test_data, verbose=1)
+
+    print("<<<<< NOW EVALUATE >>>>>")
+    model.evaluate(test_data, verbose=0)
 
 # #Inference on custom sentences
 # def check_similarity(sentence1, sentence2):
