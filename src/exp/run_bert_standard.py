@@ -1,4 +1,10 @@
 '''
+This uses the implementation of bert for nli from: models.bert.BERTNLI
+
+It just copies the code as-is, and made the changes to load datasets in their given format
+'''
+
+'''
 NLI = natural language inference, i.e., entailment, contradictory, etc
 
 sourcecode: https://keras.io/examples/nlp/semantic_similarity_with_bert/
@@ -61,11 +67,21 @@ class BertSemanticDataGenerator(tf.keras.utils.Sequence):
 
     def __len__(self):
         # Denotes the number of batches per epoch.
-        return len(self.sentence_pairs) // self.batch_size
+        batches = len(self.sentence_pairs) // self.batch_size
+        if batches * self.batch_size < len(self.sentence_pairs):
+            return batches+1
+        else:
+            return batches
+        #return len(self.sentence_pairs) // self.batch_size
 
     def __getitem__(self, idx):
         # Retrieves the batch of index.
-        indexes = self.indexes[idx * self.batch_size : (idx + 1) * self.batch_size]
+        print(idx)
+        start = idx * self.batch_size
+        end = (idx + 1) * self.batch_size
+        if end > len(self.sentence_pairs):
+            end=len(self.sentence_pairs)
+        indexes = self.indexes[start : end]
         sentence_pairs = self.sentence_pairs[indexes]
 
         # With BERT tokenizer's batch_encode_plus batch of both the sentences are
@@ -99,7 +115,7 @@ class BertSemanticDataGenerator(tf.keras.utils.Sequence):
 
 
 # There are more than 550k samples in total; we will use 100k for this example.
-def read_data(in_dir):
+def read_data(in_dir, dataset:str):
     # train_df = pd.read_csv(in_dir+"/snli_1.0_train.csv", nrows=NROWS)
     # valid_df = pd.read_csv(in_dir+"/snli_1.0_dev.csv")
     # test_df = pd.read_csv(in_dir+"/snli_1.0_test.csv")
@@ -132,9 +148,9 @@ def one_hot_encoding(train_df, valid_df, test_df, label_match:str, label_nomatch
 
 
 if __name__ == "__main__":
-    max_length = 128 #int(sys.argv[4]) # Maximum length of input sentence to the model.
-    batch_size = 32 #int(sys.argv[5])
-    epochs = 1 #int(sys.argv[6])
+    max_length = 128 #int(sys.argv[5]) # Maximum length of input sentence to the model.
+    batch_size = 32 #int(sys.argv[6])
+    epochs = 1 #int(sys.argv[7])
 
     # Labels in our dataset.
     label_match="entailment"
@@ -142,6 +158,7 @@ if __name__ == "__main__":
     in_dir = sys.argv[1]
     bert_model=sys.argv[2]
     out_dir=sys.argv[3]
+    dataset=sys.argv[4]
 
     setting = in_dir
     if "/" in in_dir:
@@ -152,7 +169,7 @@ if __name__ == "__main__":
     setting=setting+"_"+str(max_length)+"_"+str(batch_size)+"_"+str(epochs)
 
     #read the datasets
-    train_df, valid_df, test_df=read_data(in_dir)
+    train_df, valid_df, test_df=read_data(in_dir, dataset)
 
     #1 hot encoding datasets
     y_train, y_val, y_test=one_hot_encoding(train_df, valid_df, test_df, label_match, label_nomatch)
