@@ -17,6 +17,8 @@ import pandas as pd
 import tensorflow as tf
 import transformers
 import torch
+import logging
+logging.basicConfig(level=logging.ERROR)
 
 SEED = 42
 np.random.seed(SEED)
