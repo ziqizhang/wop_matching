@@ -310,7 +310,11 @@ if __name__ == "__main__":
             shape=(max_length,), dtype=tf.int32, name="token_type_ids"
         )
         # Loading pretrained BERT model.
-        bert_model = transformers.TFBertModel.from_pretrained(bert_model)
+        frompt=False
+        if bert_model.startswith("/"):
+            print("setting from_pt to True")
+            frompt=True
+        bert_model = transformers.TFBertModel.from_pretrained(bert_model, from_pt=frompt)
         # Freeze the BERT model to reuse the pretrained features without modifying them.
         bert_model.trainable = False
 

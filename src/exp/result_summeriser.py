@@ -118,8 +118,8 @@ if __name__ == "__main__":
     # summarise_cml("/home/zz/Work/wop/output/classifier/scores",
     #               "/home/zz/Work/wop/output/classifier/cml_wdc-missed.csv")
 
-    input="/home/zz/Work/wop_matching/output/bert/dataset_dm/results.csv"
-    output="/home/zz/Work/wop_matching/output/bert/dm_results.csv"
+    input="/home/zz/Work/wop_matching/output/bert/dataset_lspm/results.csv"
+    output="/home/zz/Work/wop_matching/output/bert/lspm_results.csv"
 
     summarise(input, output)
 
