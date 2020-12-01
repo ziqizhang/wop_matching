@@ -5,7 +5,7 @@ import csv, os, numpy as np
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from sklearn.utils.multiclass import unique_labels
 
-
+#only the p, r, f1 of TP will be returned
 def save_scores(predictions, gs, setting, digits, outfolder):
     outputPredictions(predictions, gs, setting, outfolder)
     filename = os.path.join(outfolder, "results.csv")
@@ -18,7 +18,7 @@ def save_scores(predictions, gs, setting, digits, outfolder):
     p, r, f1, s = precision_recall_fscore_support(gs, predictions,
                                                   labels=labels)
     acc=accuracy_score(gs, predictions)
-    mac_prf_line=prepare_score_string(p,r,f1,s,labels,target_names,digits)
+    mac_prf_line, tp_p, tp_r, tp_f1=prepare_score_string(p,r,f1,s,labels,target_names,digits)
 
     prf_mac_weighted=precision_recall_fscore_support(gs, predictions,
                                                      average='weighted')
@@ -34,6 +34,7 @@ def save_scores(predictions, gs, setting, digits, outfolder):
     file.write("\naccuracy on this run="+str(acc)+"\n\n")
 
     file.close()
+    return tp_p, tp_r, tp_f1
 
 def outputPredictions(pred, truth, setting, outfolder):
     filename = outfolder+"/predictions-"+setting+".csv"
@@ -47,9 +48,18 @@ def outputPredictions(pred, truth, setting, outfolder):
             file.write(line)
     file.close()
 
-def prepare_score_string(p, r, f1, s, labels, target_names, digits):
+#prepares a string to output to the result file, but also
+#returns the prf1 of the TP (i.e., matching)
+def prepare_score_string(p, r, f1, s, labels, target_names, digits, label_tp=1):
+    tp_p=0
+    tp_r=0
+    tp_f1=0
     string = ",precision, recall, f1, support\n"
     for i, label in enumerate(labels):
+        if label ==label_tp or label==str(label_tp):
+            tp_p=p[i]
+            tp_r=r[i]
+            tp_f1=f1[i]
         string= string+target_names[i]+","
         for v in (p[i], r[i], f1[i]):
             string = string+"{0:0.{1}f}".format(v, digits)+","
@@ -64,7 +74,7 @@ def prepare_score_string(p, r, f1, s, labels, target_names, digits):
               np.average(f1)):
         string += "{0:0.{1}f}".format(v, digits)+","
     string += '{0}'.format(np.sum(s))
-    return string
+    return string, tp_p, tp_r, tp_f1
 
 def parse_results(inFolder, outCSV):
     f=open(outCSV, 'w', newline='\n', encoding='utf-8')

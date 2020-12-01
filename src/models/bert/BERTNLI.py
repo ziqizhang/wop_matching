@@ -61,11 +61,19 @@ class BertSemanticDataGenerator(tf.keras.utils.Sequence):
 
     def __len__(self):
         # Denotes the number of batches per epoch.
-        return len(self.sentence_pairs) // self.batch_size
+        batches = len(self.sentence_pairs) // self.batch_size
+        if batches * self.batch_size < len(self.sentence_pairs):
+            return batches + 1
+        else:
+            return batches
 
     def __getitem__(self, idx):
         # Retrieves the batch of index.
-        indexes = self.indexes[idx * self.batch_size : (idx + 1) * self.batch_size]
+        start = idx * self.batch_size
+        end = (idx + 1) * self.batch_size
+        if end > len(self.sentence_pairs):
+            end = len(self.sentence_pairs)
+        indexes = self.indexes[start: end]
         sentence_pairs = self.sentence_pairs[indexes]
 
         # With BERT tokenizer's batch_encode_plus batch of both the sentences are
@@ -301,7 +309,7 @@ if __name__ == "__main__":
     #model.evaluate(test_data, verbose=0)
     pred = model.predict(test_data)
     pred=pred.argmax(axis=-1)
-    scorer.save_scores(pred, y_test.argmax(1),
+    p, r, f1=scorer.save_scores(pred, y_test.argmax(1),
                        setting,3, out_dir)
 
     print(pred)

@@ -159,6 +159,10 @@ def dm_data_to_bert_nli(dataset, leftstart, rightstart, labelcol):
     rows = []
     header = ["similarity", "sentence1", "sentence2"]
 
+    total_words=0
+    max_words=0
+    min_words=99999999
+
     for r in dataset:
         label = r[labelcol]
         sent1 = ""
@@ -166,16 +170,34 @@ def dm_data_to_bert_nli(dataset, leftstart, rightstart, labelcol):
             sent1 += str(r[i]) + " "
         sent1.strip()
 
+        words=count_words(sent1)
+        total_words+=words
+        if words>max_words:
+            max_words=words
+        if words<min_words:
+            min_words=words
+
         sent2 = ""
         for i in (range(rightstart, len(r))):
             sent2 += str(r[i]) + " "
         sent2.strip()
 
+        words = count_words(sent1)
+        total_words += words
+        if words > max_words:
+            max_words = words
+        if words < min_words:
+            min_words = words
+
         rows.append([label, sent1, sent2])
 
     df = pd.DataFrame(rows, columns=header)
+
+    print("\t\t maxwords={}, minwords={}, average={}".format(max_words, min_words, total_words/(len(df)*2)))
     return df
 
+def count_words(sent):
+    return len(sent.split(" "))
 
 # def one_hot_encoding(train_df, valid_df, test_df, label_match: str, label_nomatch: str):
 #     # One-hot encode training, validation, and test labels.
@@ -377,13 +399,15 @@ if __name__ == "__main__":
         shuffle=False,
     )
 
+    print("Training done")
+
     print(">> evaluation started: ".format(datetime.datetime.now()))
     # model.evaluate(test_data, verbose=0)
     pred = model.predict(test_data)
     pred = pred.argmax(axis=-1)
-    scorer.save_scores(pred, y_test.argmax(1),
+    p, r, f1=scorer.save_scores(pred, y_test.argmax(1),
                        setting, 3, out_dir)
-
+    print("Finished Epoch X || Run Time:\tX | Load Time:\tX || F1:\t{} | Prec:\t{} | Rec:\t{} || Ex/s: X".format(f1, p,r))
     print("end")
 
 # #Inference on custom sentences
