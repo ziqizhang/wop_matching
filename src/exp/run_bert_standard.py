@@ -324,7 +324,7 @@ if __name__ == "__main__":
         max_pool = tf.keras.layers.GlobalMaxPooling1D()(bi_lstm)
         concat = tf.keras.layers.concatenate([avg_pool, max_pool])
         dropout = tf.keras.layers.Dropout(0.3)(concat)
-        output = tf.keras.layers.Dense(3, activation="softmax")(dropout)
+        output = tf.keras.layers.Dense(len(unique_labels), activation="softmax")(dropout)
         model = tf.keras.models.Model(
             inputs=[input_ids, attention_masks, token_type_ids], outputs=output
         )
