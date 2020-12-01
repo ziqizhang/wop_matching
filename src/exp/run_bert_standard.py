@@ -10,23 +10,28 @@ NLI = natural language inference, i.e., entailment, contradictory, etc
 sourcecode: https://keras.io/examples/nlp/semantic_similarity_with_bert/
 '''
 
+import datetime
 import sys
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 import transformers
 import torch
+
 SEED = 42
 np.random.seed(SEED)
 import random, os
 from exp import scorer
+
 random.seed(SEED)
 torch.manual_seed(SEED)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 
-BATCH_SIZE=32
-#Create a custom data generator
+BATCH_SIZE = 32
+
+
+# Create a custom data generator
 class BertSemanticDataGenerator(tf.keras.utils.Sequence):
     """Generates batches of data.
 
@@ -44,13 +49,13 @@ class BertSemanticDataGenerator(tf.keras.utils.Sequence):
     """
 
     def __init__(
-        self,
-        sentence_pairs,
-        labels,
-        batch_size=BATCH_SIZE,
+            self,
+            sentence_pairs,
+            labels,
+            batch_size=BATCH_SIZE,
             bert_model="bert-base-uncased",
-        shuffle=True,
-        include_targets=True,
+            shuffle=True,
+            include_targets=True,
     ):
         self.sentence_pairs = sentence_pairs
         self.labels = labels
@@ -69,19 +74,19 @@ class BertSemanticDataGenerator(tf.keras.utils.Sequence):
         # Denotes the number of batches per epoch.
         batches = len(self.sentence_pairs) // self.batch_size
         if batches * self.batch_size < len(self.sentence_pairs):
-            return batches+1
+            return batches + 1
         else:
             return batches
-        #return len(self.sentence_pairs) // self.batch_size
+        # return len(self.sentence_pairs) // self.batch_size
 
     def __getitem__(self, idx):
         # Retrieves the batch of index.
-        print(idx)
+        #print(idx)
         start = idx * self.batch_size
         end = (idx + 1) * self.batch_size
         if end > len(self.sentence_pairs):
-            end=len(self.sentence_pairs)
-        indexes = self.indexes[start : end]
+            end = len(self.sentence_pairs)
+        indexes = self.indexes[start: end]
         sentence_pairs = self.sentence_pairs[indexes]
 
         # With BERT tokenizer's batch_encode_plus batch of both the sentences are
@@ -114,74 +119,142 @@ class BertSemanticDataGenerator(tf.keras.utils.Sequence):
             np.random.RandomState(42).shuffle(self.indexes)
 
 
-# There are more than 550k samples in total; we will use 100k for this example.
-def read_data(in_dir, dataset:str):
-    # train_df = pd.read_csv(in_dir+"/snli_1.0_train.csv", nrows=NROWS)
-    # valid_df = pd.read_csv(in_dir+"/snli_1.0_dev.csv")
-    # test_df = pd.read_csv(in_dir+"/snli_1.0_test.csv")
-    train_df = pd.read_csv(in_dir + "/small.csv")
-    valid_df = pd.read_csv(in_dir + "/small.csv")
-    test_df = pd.read_csv(in_dir + "/small.csv")
-    return train_df, valid_df, test_df
+# this method reads any prepared datasets fulfilling the DM format requirements,
+# convert them into 'sentences' required by bert. Any 'left' and 'right' columns
+# will be merged
+def read_data(in_dir):
+    # train_df = pd.read_csv(in_dir + "/small.csv")
+    # valid_df = pd.read_csv(in_dir + "/small.csv")
+    # test_df = pd.read_csv(in_dir + "/small.csv")
+    # return train_df, valid_df, test_df
+    dm_train = pd.read_csv(in_dir + "/train.csv", header=0, delimiter=',', quoting=0, encoding="utf-8",
+                           )
+    header = list(dm_train.columns.values)
+    dm_train = dm_train.fillna('').to_numpy()
+
+    label_col = -1
+    left_start = -1
+    right_start = -1
+    for i in range(0, len(header)):
+        h = header[i]
+        if h == "label":
+            label_col = i
+        if h.startswith("left_") and left_start == -1:
+            left_start = i
+        if h.startswith("right_") and right_start == -1:
+            right_start = i
+
+    dm_validation = pd.read_csv(in_dir + "/validation.csv", header=0, delimiter=',', quoting=0, encoding="utf-8",
+                                ).fillna('').to_numpy()
+
+    dm_test = pd.read_csv(in_dir + "/test.csv", header=0, delimiter=',', quoting=0, encoding="utf-8",
+                          ).fillna('').to_numpy()
+
+    return dm_data_to_bert_nli(dm_train, left_start, right_start, label_col), \
+           dm_data_to_bert_nli(dm_validation, left_start, right_start, label_col), \
+           dm_data_to_bert_nli(dm_test, left_start, right_start, label_col)
 
 
+def dm_data_to_bert_nli(dataset, leftstart, rightstart, labelcol):
+    rows = []
+    header = ["similarity", "sentence1", "sentence2"]
+
+    for r in dataset:
+        label = r[labelcol]
+        sent1 = ""
+        for i in (range(leftstart, rightstart)):
+            sent1 += str(r[i]) + " "
+        sent1.strip()
+
+        sent2 = ""
+        for i in (range(rightstart, len(r))):
+            sent2 += str(r[i]) + " "
+        sent2.strip()
+
+        rows.append([label, sent1, sent2])
+
+    df = pd.DataFrame(rows, columns=header)
+    return df
 
 
-def one_hot_encoding(train_df, valid_df, test_df, label_match:str, label_nomatch:str):
+# def one_hot_encoding(train_df, valid_df, test_df, label_match: str, label_nomatch: str):
+#     # One-hot encode training, validation, and test labels.
+#     train_df["label"] = train_df["similarity"].apply(
+#         lambda x: 0 if x == label_nomatch else 1 if x == label_match else 2
+#     )
+#     y_train = tf.keras.utils.to_categorical(train_df.label, num_classes=3)
+#
+#     valid_df["label"] = valid_df["similarity"].apply(
+#         lambda x: 0 if x == label_nomatch else 1 if x == label_match else 2
+#     )
+#     y_val = tf.keras.utils.to_categorical(valid_df.label, num_classes=3)
+#
+#     test_df["label"] = test_df["similarity"].apply(
+#         lambda x: 0 if x == label_nomatch else 1 if x == label_match else 2
+#     )
+#     y_test = tf.keras.utils.to_categorical(test_df.label, num_classes=3)
+#
+#     return y_train, y_val, y_test
+
+def one_hot_encoding(train_df, valid_df, test_df):
+    labels = set(list(train_df["similarity"]))
+    count=0
+    label_lookup = dict()
+    for l in labels:
+        label_lookup[l]=count
+        count+=1
+
     # One-hot encode training, validation, and test labels.
     train_df["label"] = train_df["similarity"].apply(
-        lambda x: 0 if x == label_nomatch else 1 if x == label_match else 2
+        lambda x: label_lookup[x]
     )
-    y_train = tf.keras.utils.to_categorical(train_df.label, num_classes=3)
+    y_train = tf.keras.utils.to_categorical(train_df.label, num_classes=len(label_lookup))
 
     valid_df["label"] = valid_df["similarity"].apply(
-        lambda x: 0 if x == label_nomatch else 1 if x == label_match else 2
+        lambda x: label_lookup[x]
     )
-    y_val = tf.keras.utils.to_categorical(valid_df.label, num_classes=3)
+    y_val = tf.keras.utils.to_categorical(valid_df.label, num_classes=len(label_lookup))
 
     test_df["label"] = test_df["similarity"].apply(
-        lambda x: 0 if x == label_nomatch else 1 if x == label_match else 2
+        lambda x: label_lookup[x]
     )
-    y_test = tf.keras.utils.to_categorical(test_df.label, num_classes=3)
+    y_test = tf.keras.utils.to_categorical(test_df.label, num_classes=len(label_lookup))
 
-    return y_train, y_val, y_test
-
+    return y_train, y_val, y_test, len(label_lookup)
 
 if __name__ == "__main__":
-    max_length = 128 #int(sys.argv[5]) # Maximum length of input sentence to the model.
-    batch_size = 32 #int(sys.argv[6])
-    epochs = 1 #int(sys.argv[7])
+    max_length = int(sys.argv[4]) # Maximum length of input sentence to the model.
+    batch_size = int(sys.argv[5])
+    epochs = int(sys.argv[6])
 
     # Labels in our dataset.
-    label_match="entailment"
-    label_nomatch="contradiction"
+    # label_match = "entailment"
+    # label_nomatch = "contradiction"
     in_dir = sys.argv[1]
-    bert_model=sys.argv[2]
-    out_dir=sys.argv[3]
-    dataset=sys.argv[4]
+    bert_model = sys.argv[2]
+    out_dir = sys.argv[3]
+    #dataset = sys.argv[4]
 
     setting = in_dir
     if "/" in in_dir:
         setting = in_dir[setting.rindex("/") + 1:]
-    setting = setting+"_"+bert_model
+    setting = setting + "_" + bert_model
     if "/" in bert_model:
-        setting=setting[setting.rindex("/")+1:]
-    setting=setting+"_"+str(max_length)+"_"+str(batch_size)+"_"+str(epochs)
+        setting = setting[setting.rindex("/") + 1:]
+    setting = setting + "_" + str(max_length) + "_" + str(batch_size) + "_" + str(epochs)
 
-    #read the datasets
-    train_df, valid_df, test_df=read_data(in_dir, dataset)
+    print(">> loading and converting dataset: {}".format(datetime.datetime.now()))
+    # read the datasets
+    train_df, valid_df, test_df = read_data(in_dir)
 
-    #1 hot encoding datasets
-    y_train, y_val, y_test=one_hot_encoding(train_df, valid_df, test_df, label_match, label_nomatch)
+    # 1 hot encoding datasets
+    y_train, y_val, y_test, unique_labels = one_hot_encoding(train_df, valid_df, test_df)
 
     # Shape of the data
     print(f"Total train samples : {train_df.shape[0]}")
     print(f"Total validation samples: {valid_df.shape[0]}")
     print(f"Total test samples: {valid_df.shape[0]}")
 
-    print(f"Sentence1: {train_df.loc[1, 'sentence1']}")
-    print(f"Sentence2: {train_df.loc[1, 'sentence2']}")
-    print(f"Similarity: {train_df.loc[1, 'similarity']}")
 
     # We have some NaN entries in our train data, we will simply drop them.
     print("Number of missing values")
@@ -194,21 +267,8 @@ if __name__ == "__main__":
     print("Validation Target Distribution")
     print(valid_df.similarity.value_counts())
 
-    #The value "-" appears as part of our training and validation targets. We will skip these samples.
-    #todo: this can be deleted
-    train_df = (
-        train_df[train_df.similarity != "-"]
-        .sample(frac=1.0, random_state=42)
-        .reset_index(drop=True)
-    )
-    valid_df = (
-        valid_df[valid_df.similarity != "-"]
-        .sample(frac=1.0, random_state=42)
-        .reset_index(drop=True)
-    )
 
-
-    #Build the model
+    # Build the model
     # Create the model under a distribution strategy scope.
     strategy = tf.distribute.MirroredStrategy()
 
@@ -247,17 +307,21 @@ if __name__ == "__main__":
             inputs=[input_ids, attention_masks, token_type_ids], outputs=output
         )
 
+
+        loss_func= "categorical_crossentropy"
+        if unique_labels<3:
+            loss_func= "binary_crossentropy"
         model.compile(
             optimizer=tf.keras.optimizers.Adam(),
-            loss="categorical_crossentropy",
+            loss=loss_func,
             metrics=["acc"],
         )
-
 
     print(f"Strategy: {strategy}")
     model.summary()
 
-    #Create train and validation data generators
+    print(">> training started: {}".format(datetime.datetime.now()))
+    # Create train and validation data generators
     train_data = BertSemanticDataGenerator(
         train_df[["sentence1", "sentence2"]].values.astype("str"),
         y_train,
@@ -271,9 +335,9 @@ if __name__ == "__main__":
         shuffle=False,
     )
 
-    #Train the Model
-    #Training is done only for the top layers to perform "feature extraction", which will allow the model to use the
-    #representations of the pretrained model.
+    # Train the Model
+    # Training is done only for the top layers to perform "feature extraction", which will allow the model to use the
+    # representations of the pretrained model.
     history = model.fit(
         train_data,
         validation_data=valid_data,
@@ -282,22 +346,21 @@ if __name__ == "__main__":
         workers=-1,
     )
 
-    #Fine-tuning
-    #This step must only be performed after the feature extraction model has been trained to convergence on the new data.
-    #This is an optional last step where bert_model is unfreezed and retrained with a very low learning rate. This can
-    #deliver meaningful improvement by incrementally adapting the pretrained features to the new data.
-    #Unfreeze the bert_model.
+    # Fine-tuning
+    # This step must only be performed after the feature extraction model has been trained to convergence on the new data.
+    # This is an optional last step where bert_model is unfreezed and retrained with a very low learning rate. This can
+    # deliver meaningful improvement by incrementally adapting the pretrained features to the new data.
+    # Unfreeze the bert_model.
     bert_model.trainable = True
-    #Recompile the model to make the change effective.
+    # Recompile the model to make the change effective.
     model.compile(
         optimizer=tf.keras.optimizers.Adam(1e-5),
-        loss="categorical_crossentropy", #todo: if task is binary, this needs changing
+        loss=loss_func,
         metrics=["accuracy"],
     )
     model.summary()
 
-
-    #Train the entire model end-to-end
+    # Train the entire model end-to-end
     # history = model.fit(
     #     train_data,
     #     validation_data=valid_data,
@@ -306,7 +369,7 @@ if __name__ == "__main__":
     #     workers=-1,
     # )
 
-    #Evaluate model on the test set
+    # Evaluate model on the test set
     test_data = BertSemanticDataGenerator(
         test_df[["sentence1", "sentence2"]].values.astype("str"),
         y_test,
@@ -314,14 +377,13 @@ if __name__ == "__main__":
         shuffle=False,
     )
 
-    print("<<<<< NOW EVALUATE >>>>>")
-    #model.evaluate(test_data, verbose=0)
+    print(">> evaluation started: ".format(datetime.datetime.now()))
+    # model.evaluate(test_data, verbose=0)
     pred = model.predict(test_data)
-    pred=pred.argmax(axis=-1)
+    pred = pred.argmax(axis=-1)
     scorer.save_scores(pred, y_test.argmax(1),
-                       setting,3, out_dir)
+                       setting, 3, out_dir)
 
-    print(pred)
     print("end")
 
 # #Inference on custom sentences
@@ -349,7 +411,3 @@ if __name__ == "__main__":
 # sentence1 = "A soccer game with multiple males playing"
 # sentence2 = "Some men are playing a sport"
 # check_similarity(sentence1, sentence2)
-
-
-
-
