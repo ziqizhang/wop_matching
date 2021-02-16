@@ -315,7 +315,7 @@ if __name__ == "__main__":
         if bert_model_str.startswith("/"):
             print("setting from_pt to True")
             frompt=True
-        bert_model = transformers.TFBertModel.from_pretrained(bert_model, from_pt=frompt)
+        bert_model = transformers.TFBertModel.from_pretrained(bert_model_str, from_pt=frompt)
         # Freeze the BERT model to reuse the pretrained features without modifying them.
         bert_model.trainable = False
 
