@@ -97,8 +97,8 @@ if __name__ == "__main__":
     optim.set_parameters(model.named_parameters())
     start = time.time()
 
-    if len(sys.args>5):
-        ep=int(sys.args[5])
+    if len(sys.argv>5):
+        ep=int(sys.argv[5])
     else:
         ep=30
     model.run_train(
