@@ -96,6 +96,11 @@ if __name__ == "__main__":
     optim = dm.optim.Optimizer(method='adam', lr=lr, max_grad_norm=5, start_decay_at=1, beta1=0.9, beta2=0.999, adagrad_accum=0.0, lr_decay=lr_decay)
     optim.set_parameters(model.named_parameters())
     start = time.time()
+
+    if len(sys.arg>5):
+        ep=int(sys.arg[5])
+    else:
+        ep=30
     model.run_train(
          train,
          validation,
@@ -104,7 +109,10 @@ if __name__ == "__main__":
          pos_neg_ratio=pos_neg_ratio,
          optimizer=optim,
          label_smoothing=smoothing,
-         best_save_path=ourput_dir+"/best_model.pth"
+         best_save_path=ourput_dir+"/best_model.pth",
+        epochs=ep
+
+
     )
     # end = time.time()
     # print('Training time: ' + str(end - start))
