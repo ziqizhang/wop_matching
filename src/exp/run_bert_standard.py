@@ -59,6 +59,7 @@ class BertSemanticDataGenerator(tf.keras.utils.Sequence):
             shuffle=True,
             include_targets=True,
     ):
+        print("[[using bert model]]="+bert_model)
         self.sentence_pairs = sentence_pairs
         self.labels = labels
         self.shuffle = shuffle
