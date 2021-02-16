@@ -1,5 +1,8 @@
 '''
 This file processes the output of 'run_dm_standard.py' and save results to a csv
+
+NB: to switch between the DM and the LSPM datasets, see line 99/100. One for dm, one for lspm. Comment out
+corresponding line accordingly
 '''
 import csv, os, numpy as np
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
@@ -94,7 +97,7 @@ def parse_results(inFolder, outCSV):
             scores = []
             for l in lines:
                 #
-                # if l.startswith("Structured") or l.startswith("Dirty") or l.startswith("Textual"):
+                #if l.startswith("Structured") or l.startswith("Dirty") or l.startswith("Textual"):
                 if l.startswith("original") or l.startswith("mtcat"):
                     if resultID is None:
                         resultID=l.strip()
@@ -134,6 +137,6 @@ if __name__ == "__main__":
     # outCSV="/home/zz/Work/wop_matching/output/dm/dm_result.csv"
     # parse_results(inFolder,outCSV)
 
-    inFolder = "/home/zz/Work/wop_matching/output/lspm/raw"
-    outCSV = "/home/zz/Work/wop_matching/output/lspm/lspm_result.csv"
+    inFolder = "/home/zz/Work/wop_matching/output/tmp"
+    outCSV = "/home/zz/Work/wop_matching/output/lspm.csv"
     parse_results(inFolder, outCSV)

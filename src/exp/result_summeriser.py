@@ -112,14 +112,17 @@ if __name__ == "__main__":
     # transform_score_format_lodataset("/home/zz/Work/wop/tmp/classifier_with_desc",
     #                                  "/home/zz/Work/wop/output/classifier/dnn_d_X_result.csv")
 
-    # summarise("/home/zz/Work/wop/output/classifier/dnn_icecat-test-missing/output/classifier",
+    # summarise("/home/zz/Work/wop/output/classifier/",
     #               "/home/zz/Work/wop/output/classifier/scores.csv")
 
     # summarise_cml("/home/zz/Work/wop/output/classifier/scores",
     #               "/home/zz/Work/wop/output/classifier/cml_wdc-missed.csv")
 
-    input="/home/zz/Work/wop_matching/output/bert/dataset_lspm/results.csv"
-    output="/home/zz/Work/wop_matching/output/bert/lspm_results.csv"
+    # input="/home/zz/Work/wop_matching/output/bert_dmdataset_proddesc/output/results.csv"
+    # output="/home/zz/Work/wop_matching/output/dm_results.csv"
+
+    input = "/home/zz/Work/wop_matching/output/bert_lspmdataset_proddesc/output/results.csv"
+    output = "/home/zz/Work/wop_matching/output/lspm_results.csv"
 
     summarise(input, output)
 

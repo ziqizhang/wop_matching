@@ -83,7 +83,7 @@ if __name__ == "__main__":
                         train='train.csv', validation='validation.csv', test='test.csv')
 
     # parameters to keep consistent with
-    nn_type = 'rnn'
+    nn_type = 'hybrid'
     comp_type = 'abs-diff'
     #epochs = 15
     pos_neg_ratio = 1

@@ -255,15 +255,15 @@ if __name__ == "__main__":
     # label_match = "entailment"
     # label_nomatch = "contradiction"
     in_dir = sys.argv[1]
-    bert_model = sys.argv[2]
+    bert_model_str = sys.argv[2]
     out_dir = sys.argv[3]
     #dataset = sys.argv[4]
 
     setting = in_dir
     if "/" in in_dir:
         setting = in_dir[setting.rindex("/") + 1:]
-    setting = setting + "_" + bert_model
-    if "/" in bert_model:
+    setting = setting + "_" + bert_model_str
+    if "/" in bert_model_str:
         setting = setting[setting.rindex("/") + 1:]
     setting = setting + "_" + str(max_length) + "_" + str(batch_size) + "_" + str(epochs)
 
@@ -311,7 +311,7 @@ if __name__ == "__main__":
         )
         # Loading pretrained BERT model.
         frompt=False
-        if bert_model.startswith("/"):
+        if bert_model_str.startswith("/"):
             print("setting from_pt to True")
             frompt=True
         bert_model = transformers.TFBertModel.from_pretrained(bert_model, from_pt=frompt)
@@ -355,12 +355,14 @@ if __name__ == "__main__":
         y_train,
         batch_size=batch_size,
         shuffle=True,
+        bert_model=bert_model_str
     )
     valid_data = BertSemanticDataGenerator(
         valid_df[["sentence1", "sentence2"]].values.astype("str"),
         y_val,
         batch_size=batch_size,
         shuffle=False,
+        bert_model=bert_model_str
     )
 
     # Train the Model
@@ -403,6 +405,7 @@ if __name__ == "__main__":
         y_test,
         batch_size=batch_size,
         shuffle=False,
+        bert_model=bert_model_str
     )
 
     print("Training done")
