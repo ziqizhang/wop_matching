@@ -121,7 +121,7 @@ if __name__ == "__main__":
     # input="/home/zz/Work/wop_matching/output/bert_dmdataset_proddesc/output/results.csv"
     # output="/home/zz/Work/wop_matching/output/dm_results.csv"
 
-    input = "/home/zz/Work/wop_matching/output/bert_lspmdataset_proddesc/output/results.csv"
+    input = "/home/zz/Work/wop_matching/output/bert_lspm/output/results.csv"
     output = "/home/zz/Work/wop_matching/output/lspm_results.csv"
 
     summarise(input, output)
