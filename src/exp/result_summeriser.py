@@ -121,8 +121,10 @@ if __name__ == "__main__":
     # input="/home/zz/Work/wop_matching/output/bert_dmdataset_proddesc/output/results.csv"
     # output="/home/zz/Work/wop_matching/output/dm_results.csv"
 
-    input = "/home/zz/Work/wop_matching/output/bert_lspm/output/results.csv"
-    output = "/home/zz/Work/wop_matching/output/lspm_results.csv"
+    #input = "/home/zz/Work/wop_matching/output/bert_dm/output/results.csv"
+    #output = "/home/zz/Work/wop_matching/output/bert_dm.csv"
+    input = "/home/zz/Work/data/entity_linking/deepmatcher/processed/Structured/Beer/results.csv"
+    output = "/home/zz/Work/data/entity_linking/deepmatcher/processed/Structured/Beer/bert_dm.csv"
 
     summarise(input, output)
 

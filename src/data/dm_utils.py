@@ -7,6 +7,7 @@ import numpy as np
 np.random.seed(42)
 import random, gzip, json
 random.seed(42)
+from pathlib import Path
 
 import os,csv, re
 from copy import deepcopy
@@ -245,8 +246,79 @@ def merge_addTranslation(inFolder):
             writer.writerow(row)
             count += 1
 
+# input must be a folder (can be recursive) containing the following three files:
+# train.csv, test.csv, validation.csv. These must conform to the format required by DM
+# these files will be overwritten, by keeping only the name properties. All other properties are deleted, unless
+# there are the 'mt_' column
+def keep_name_only(in_folder):
+    result = list(Path(in_folder).rglob("*.csv"))
+    for f in result:
+        f=str(f)
+        if "train.csv" in f or "test.csv" in f or "validation.csv" in f:
+            df = pd.read_csv(f,header=0, encoding="utf-8")
+            #findout which columns need to keep
+            headers=list(df.columns.values)
+            left_n=-1
+            right_n=-1
+            #left_id=-1
+            #right_id=-1
+            left_mtname=-1
+            right_mtname=-1
+
+            for i in range(0, len(headers)):
+                h = headers[i]
+                #if (h.lower()=="left_id"):
+                #    left_id=i
+                #elif (h.lower()=="right_id"):
+                #    right_id=i
+                if("_name" in h.lower() and "left_" in h.lower() and left_n==-1):
+                    left_n=i
+                elif ("_title" in h.lower() and "left_" in h.lower() and left_n == -1):
+                    left_n = i
+                elif ("_name" in h.lower() and "right_" in h.lower() and right_n == -1):
+                    right_n = i
+                elif ("_title" in h.lower() and "right_" in h.lower() and right_n == -1):
+                    right_n = i
+                elif ("mtname" in h.lower() and "left_" in h.lower()):
+                    left_mtname=i
+                elif ("mtname" in h.lower() and "right_" in h.lower()):
+                    right_mtname=i
+
+            #start writing the new data
+            outf= open(f, 'w', newline='\n', encoding='utf-8')
+            print("writing "+f)
+            writer = csv.writer(outf, delimiter=",", quoting=csv.QUOTE_ALL)
+            #newheader=["id","label","left_id", "left_Name"]
+            newheader = ["id", "label", "left_Name"]
+            if left_mtname!=-1:
+                newheader.append("left_mtname")
+            #newheader.append("right_id")
+            newheader.append("right_Name")
+            if right_mtname!=-1:
+                newheader.append("right_mtname")
+            writer.writerow(newheader)
+
+            for row in df.values:
+                newrow=[row[0], row[1], row[left_n]]
+                if left_mtname!=-1:
+                    newrow.append(row[left_mtname])
+                #newrow.append(row[right_id])
+                newrow.append(row[right_n])
+                if right_mtname!=-1:
+                    newrow.append(row[right_mtname])
+                writer.writerow(newrow)
+
+
+            outf.close()
 
 if __name__ == "__main__":
+    #convert data in dm format but keep only names and mtnames if any
+    keep_name_only("/home/zz/Work/data/entity_linking/deepmatcher/processed")
+    keep_name_only("/home/zz/Work/data/entity_linking/deepmatcher/processed_mt")
+    #keep_name_only("/home/zz/Work/data/wdc-lspc/dm_wdclspc_small_mt")
+    #keep_name_only("/home/zz/Work/data/wdc-lspc/dm_wdclspc_small_original")
+    exit(0)
+
     # #take the downloaded DM datasets containing tableA, B etc, create the required trian/test/valid for DM
     # #WARNING: will overwrite data
     # parse_dm_datasets("/home/zz/Work/data/entity_linking/deepmatcher/Structured/iTunes-Amazon")
