@@ -11,7 +11,7 @@ from sklearn.utils.multiclass import unique_labels
 #only the p, r, f1 of TP will be returned
 def save_scores(predictions, gs, setting, digits, outfolder):
     outputPredictions(predictions, gs, setting, outfolder)
-    filename = os.path.join(outfolder, "results.csv")
+    filename = os.path.join(outfolder, "detailed-results.csv")
     file = open(filename, "a+")
     file.write(setting)
 
