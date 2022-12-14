@@ -6,22 +6,19 @@ It just copies the code as-is, and made the changes to load datasets in their gi
 WARNING: ALTHOUGH THIS CODE TAKES A n-fold parameter, it does not really do n-fold! use
 ru_bert_nfold.py instead
 '''
+from sklearn.model_selection import StratifiedKFold
 
 '''
 NLI = natural language inference, i.e., entailment, contradictory, etc
 
 sourcecode: https://keras.io/examples/nlp/semantic_similarity_with_bert/
 '''
-import csv
+import csv, datetime, sys, torch, logging, transformers,keras
 from statistics import mean
-import datetime
-import sys
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-import transformers
-import torch
-import logging
+
 logging.basicConfig(level=logging.ERROR)
 
 SEED = 42
@@ -146,9 +143,9 @@ def read_data(in_dir):
         h = header[i]
         if h == "label":
             label_col = i
-        if h.startswith("left_") and left_start == -1:
+        if h.startswith("left_") and h!='left_id' and left_start == -1:
             left_start = i
-        if h.startswith("right_") and right_start == -1:
+        if h.startswith("right_") and h!='right_id' and right_start == -1:
             right_start = i
 
     dm_validation = pd.read_csv(in_dir + "/validation.csv", header=0, delimiter=',', quoting=0, encoding="utf-8",
@@ -200,7 +197,11 @@ def dm_data_to_bert_nli(dataset, leftstart, rightstart, labelcol):
 
     df = pd.DataFrame(rows, columns=header)
 
-    print("\t\t maxwords={}, minwords={}, average={}".format(max_words, min_words, total_words/(len(df)*2)))
+    if (len(df)>0):
+        print("\t\t maxwords={}, minwords={}, average={}".format(max_words, min_words, total_words/(len(df)*2)))
+    else:
+        print("\t\t maxwords=0, minwords=0, average=0")
+
     return df
 
 def count_words(sent):
@@ -252,6 +253,8 @@ def one_hot_encoding(train_df, valid_df, test_df):
     return y_train, y_val, y_test, len(label_lookup)
 
 if __name__ == "__main__":
+    #/home/zz/Work/data/entity_linking/deepmatcher/processed/Structured/Beer
+    #/home/zz/Work/data/chinese_recipes/dm_format
     max_length = int(sys.argv[4]) # Maximum length of input sentence to the model.
     batch_size = int(sys.argv[5])
     epochs = int(sys.argv[6])
@@ -280,29 +283,42 @@ if __name__ == "__main__":
     print(">> loading and converting dataset: {}".format(datetime.datetime.now()))
     # read the datasets
     train_df, valid_df, test_df = read_data(in_dir)
+    # merge into a single
+    merged = pd.concat([train_df, valid_df, test_df],ignore_index=True)
+    # all_y - get the label vector
+    all_y = pd.to_numeric(merged.iloc[:,0])
 
-    for fold in range(0, folds):
-        print("]] FOLD {} START=".format(fold)+str(fold))
-    # 1 hot encoding datasets
-        y_train, y_val, y_test, unique_labels = one_hot_encoding(train_df, valid_df, test_df)
+    # build the 1-hot encoding for label vector, needed by BERT
+    y_train, y_val, y_test, unique_labels = one_hot_encoding(train_df, valid_df, test_df)
+    # merge into a single
+    all_y_onehot = np.concatenate((y_train, y_val, y_test))
 
+    kfold =StratifiedKFold(n_splits=folds, random_state=SEED, shuffle=False)
+    fold_index=0
+    for train_index, test_index in kfold.split(merged, all_y):
+        keras.backend.clear_session()
+        fold_index+=1
+        print("FOLD {}/{} START".format(fold_index, folds))
+        # 1 hot encoding datasets
         # Shape of the data
-        print(f"Total train samples : {train_df.shape[0]}")
-        print(f"Total validation samples: {valid_df.shape[0]}")
-        print(f"Total test samples: {valid_df.shape[0]}")
+        train_X = merged.loc[train_index, :]
+        test_X = merged.loc[test_index, :]
+        train_y= all_y_onehot[train_index]
+        test_y = all_y_onehot[test_index]
 
+        print(f"Total train samples : {train_X.shape[0]}")
+        print(f"Total test samples: {test_X.shape[0]}")
 
         # We have some NaN entries in our train data, we will simply drop them.
         print("Number of missing values")
-        print(train_df.isnull().sum())
-        train_df.dropna(axis=0, inplace=True)
+        print(train_X.isnull().sum())
+        train_X.dropna(axis=0, inplace=True)
 
         print("Train Target Distribution")
-        print(train_df.similarity.value_counts())
+        print(train_X.similarity.value_counts())
 
-        print("Validation Target Distribution")
-        print(valid_df.similarity.value_counts())
-
+        print("Test Target Distribution")
+        print(test_X.similarity.value_counts())
 
         # Build the model
         # Create the model under a distribution strategy scope.
@@ -347,7 +363,6 @@ if __name__ == "__main__":
                 inputs=[input_ids, attention_masks, token_type_ids], outputs=output
             )
 
-
             loss_func= "categorical_crossentropy"
             if unique_labels<3:
                 loss_func= "binary_crossentropy"
@@ -364,17 +379,10 @@ if __name__ == "__main__":
         print(">> training started: {}".format(datetime.datetime.now()))
         # Create train and validation data generators
         train_data = BertSemanticDataGenerator(
-            train_df[["sentence1", "sentence2"]].values.astype("str"),
-            y_train,
+            train_X[["sentence1", "sentence2"]].values.astype("str"),
+            train_y,
             batch_size=batch_size,
             shuffle=True,
-            bert_model=bert_model_str
-        )
-        valid_data = BertSemanticDataGenerator(
-            valid_df[["sentence1", "sentence2"]].values.astype("str"),
-            y_val,
-            batch_size=batch_size,
-            shuffle=False,
             bert_model=bert_model_str
         )
 
@@ -383,7 +391,7 @@ if __name__ == "__main__":
         # representations of the pretrained model.
         history = model.fit(
             train_data,
-            validation_data=valid_data,
+            validation_data=train_data, #warning: we should not be validating the model using train
             epochs=epochs,
             use_multiprocessing=True,
             workers=-1,
@@ -414,8 +422,8 @@ if __name__ == "__main__":
 
         # Evaluate model on the test set
         test_data = BertSemanticDataGenerator(
-            test_df[["sentence1", "sentence2"]].values.astype("str"),
-            y_test,
+            test_X[["sentence1", "sentence2"]].values.astype("str"),
+            test_y,
             batch_size=batch_size,
             shuffle=False,
             bert_model=bert_model_str
@@ -427,10 +435,10 @@ if __name__ == "__main__":
         # model.evaluate(test_data, verbose=0)
         pred = model.predict(test_data)
         pred = pred.argmax(axis=-1)
-        tp, tr, tf1=result_summariser_dmresults.save_scores(pred, y_test.argmax(1),
+        tp, tr, tf1=result_summariser_dmresults.save_scores(pred, test_y.argmax(1),
                                                             setting, 3, out_dir)
         print("Finished Epoch X || Run Time:\tX | Load Time:\tX || F1:\t{} | Prec:\t{} | Rec:\t{} || Ex/s: X".format(tf1, tp,tr))
-        print("]] FOLD {} END= p={}, r={}, F1={}".format(fold,tp, tr, tf1))
+        print("]] FOLD {} END= p={}, r={}, F1={}".format(fold_index,tp, tr, tf1))
 
         folds_p.append(tp)
         folds_r.append(tr)

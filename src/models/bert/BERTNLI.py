@@ -13,7 +13,7 @@ import torch
 SEED = 42
 np.random.seed(SEED)
 import random, os
-from exp import scorer
+from exp import result_summariser_dmresults
 random.seed(SEED)
 torch.manual_seed(SEED)
 torch.backends.cudnn.deterministic = True
@@ -309,8 +309,8 @@ if __name__ == "__main__":
     #model.evaluate(test_data, verbose=0)
     pred = model.predict(test_data)
     pred=pred.argmax(axis=-1)
-    p, r, f1=scorer.save_scores(pred, y_test.argmax(1),
-                       setting,3, out_dir)
+    p, r, f1=result_summariser_dmresults.save_scores(pred, y_test.argmax(1),
+                                                     setting, 3, out_dir)
 
     print(pred)
     print("end")

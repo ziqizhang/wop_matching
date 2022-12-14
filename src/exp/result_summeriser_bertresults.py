@@ -123,8 +123,8 @@ if __name__ == "__main__":
 
     #input = "/home/zz/Work/wop_matching/output/bert_dm/output/results.csv"
     #output = "/home/zz/Work/wop_matching/output/bert_dm.csv"
-    input = "/home/zz/Work/data/entity_linking/deepmatcher/processed/Structured/Beer/results.csv"
-    output = "/home/zz/Work/data/entity_linking/deepmatcher/processed/Structured/Beer/bert_dm.csv"
+    input = "/home/zz/Work/wop_matching/output/mt_pk/bert_on_bothdatasets/dm_dmdataset_mtpk.txt"
+    output = "/home/zz/Work/wop_matching/output/mt_pk/bert_on_bothdatasets/dm_dmdata.csv"
 
     summarise(input, output)
 

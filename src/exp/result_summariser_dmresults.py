@@ -98,7 +98,7 @@ def parse_results(inFolder, outCSV):
             for l in lines:
                 #
                 #if l.startswith("Structured") or l.startswith("Dirty") or l.startswith("Textual"):
-                if l.startswith("original") or l.startswith("mtcat"):
+                if l.startswith("original") or l.startswith("mtcat") or l.startswith("mt_added"):
                     if resultID is None:
                         resultID=l.strip()
                         scores.append(resultID)
@@ -137,6 +137,6 @@ if __name__ == "__main__":
     # outCSV="/home/zz/Work/wop_matching/output/dm/dm_result.csv"
     # parse_results(inFolder,outCSV)
 
-    inFolder = "/home/zz/Work/wop_matching/output/tmp"
-    outCSV = "/home/zz/Work/wop_matching/output/lspm.csv"
+    inFolder = "/home/zz/Work/wop_matching/output/mt_pk/dm_on_bothdatasets/lspm"
+    outCSV = "/home/zz/Work/wop_matching/output/mt_pk/dm_on_bothdatasets/lspm.csv"
     parse_results(inFolder, outCSV)
